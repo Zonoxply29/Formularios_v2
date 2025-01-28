@@ -69,7 +69,43 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {}
         });
+        
+        editTextNumeroTarjeta.setHint("1234-5678-9101-1112");
+        editTextNumeroTarjeta.setInputType(InputType.TYPE_CLASS_NUMBER);
+        editTextNumeroTarjeta.setFilters(new InputFilter[]{new InputFilter.LengthFilter(19)});
 
+        editTextNumeroTarjeta.addTextChangedListener(new TextWatcher() {
+            private boolean isFormatting;
+            private boolean deletingHyphen;
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                deletingHyphen = count > after && s.charAt(start) == '-';
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (isFormatting || deletingHyphen) return;
+
+                isFormatting = true;
+                String cleanText = s.toString().replace("-", "");
+
+                StringBuilder formatted = new StringBuilder();
+                for (int i = 0; i < cleanText.length(); i++) {
+                    formatted.append(cleanText.charAt(i));
+                    if ((i + 1) % 4 == 0 && i + 1 < cleanText.length()) {
+                        formatted.append("-");
+                    }
+                }
+
+                editTextNumeroTarjeta.setText(formatted);
+                editTextNumeroTarjeta.setSelection(formatted.length());
+                isFormatting = false;
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         editTextCVV.setFilters(new InputFilter[]{new InputFilter.LengthFilter(3)});
 
@@ -83,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                 String cvv = editTextCVV.getText().toString().trim();
 
 
-                if (numeroTarjeta.length() != 16) {
+                if (numeroTarjeta.length() != 19) {
                     Toast.makeText(MainActivity.this, "El número de tarjeta debe tener 16 dígitos", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -99,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
 
-                String mensajeFinal = "Número de Tarjeta: " + "**** **** **** " + numeroTarjeta.substring(12) +
+                String mensajeFinal = "Número de Tarjeta: " + "**** **** **** " + numeroTarjeta.substring(14) +
                         "\nFecha de Expiración: " + fechaExpiracion +
                         "\nCVV: ***";
 
