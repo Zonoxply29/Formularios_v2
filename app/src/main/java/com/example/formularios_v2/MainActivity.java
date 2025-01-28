@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
@@ -17,8 +18,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int PICK_FILE_REQUEST = 1; // Código de solicitud
+    private static final int PICK_FILE_REQUEST = 1;
     private TextView textViewRuta;
+    private Uri fileUri; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,8 +30,17 @@ public class MainActivity extends AppCompatActivity {
         textViewRuta = findViewById(R.id.textViewRuta);
         Button btnSeleccionarArchivo = findViewById(R.id.selec_archivo);
 
-        // Configurar botón para seleccionar archivo
+
         btnSeleccionarArchivo.setOnClickListener(v -> openFilePicker());
+
+
+        textViewRuta.setOnClickListener(v -> {
+            if (fileUri != null) {
+                openFilePreview(fileUri);
+            } else {
+                Toast.makeText(MainActivity.this, "No hay archivo seleccionado", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void openFilePicker() {
@@ -44,9 +55,9 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_FILE_REQUEST && resultCode == RESULT_OK && data != null) {
-            Uri uri = data.getData(); // Obtiene la URI del archivo seleccionado
-            String filePath = getFileNameFromUri(uri);
-            textViewRuta.setText(filePath); // Muestra la ruta en el TextView
+            fileUri = data.getData(); // Guarda la URI del archivo seleccionado
+            String fileName = getFileNameFromUri(fileUri);
+            textViewRuta.setText(fileName); // Muestra el nombre del archivo
         }
     }
 
@@ -64,5 +75,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return fileName;
+    }
+
+    private void openFilePreview(Uri uri) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, getContentResolver().getType(uri));
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "No hay aplicación para abrir este archivo", Toast.LENGTH_SHORT).show();
+        }
     }
 }
